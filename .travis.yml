@@ -1,0 +1,20 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t aapurvk/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true aapurvk/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t aapurvk/multi-client ./client
+  - docker build -t aapurvk/multi-nginx ./nginx
+  - docker build -t aapurvk/multi-server ./server
+  - docker build -t aapurvk/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push aapurvk/multi-client
+  - docker push aapurvk/multi-nginx
+  - docker push aapurvk/multi-server
+  - docker push aapurvk/multi-worker
